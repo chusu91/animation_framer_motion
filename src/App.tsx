@@ -1,24 +1,14 @@
 import styled from "styled-components";
-import { motion } from "framer-motion";
-import { useRef } from "react";
+import { motion, useMotionValue, useScroll, useTransform } from "framer-motion";
+import { useEffect, useRef } from "react";
 
-const Wrapper = styled.div`
-  height: 100vh;
+const Wrapper = styled(motion.div)`
+  height: 200vh;
   width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
-`;
-
-const BiggerBox = styled.div`
-  width: 600px;
-  height: 600px;
-  background-color: rgba(255, 255, 255, 0.4);
-  border-radius: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  background-color: linear-gradient(135deg, rgb(238, 0, 153), rgb(221, 0, 238));
 `;
 
 const Box = styled(motion.div)`
@@ -37,25 +27,34 @@ const boxVariants = {
 };
 
 function App() {
-  const biggerBoxRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  // motion keep watch x's value, but do not re-render.
+  // style값으로 이동한 값 계속 추적해서 따올 수 있음.
+  const rotateZ = useTransform(x, [-800, 800], [-360, 360]);
+  //x값이 두번째 인자의 배열일 때, 세번째 인자의 배열로 바꿔줌.
+  // 두번쨰 인자는 인풋, 세번째 인자는 아웃풋. 인풋을 아웃풋값으로 변환해줌
+  const gradient = useTransform(
+    x,
+    [-800, 0, 800],
+    [
+      "linear-gradient(135deg, rgb(155, 202, 240), rgb(78, 85, 215)",
+      "linear-gradient(135deg, rgb(238, 0, 153), rgb(221, 0, 238)",
+      "linear-gradient(135deg, rgb(133, 170, 151), rgb(209, 203, 84)",
+    ]
+  );
+  const { scrollY, scrollYProgress } = useScroll();
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 5]);
+  // useEffect(() => {
+  //   //x.onChange(() => console.log(x.get()));
+  //   scrollY.onChange(() => console.log(scrollY.get(), scrollYProgress.get()));
+  // }, [scrollY, scrollYProgress]);
   return (
-    <Wrapper>
-      <BiggerBox ref={biggerBoxRef}>
-        <Box
-          drag
-          //drag="x" or drag="y"하면 x축 혹은 y축으로만 드래그 가능
-          dragSnapToOrigin
-          //dragElastic={0}
-          //default value 0.5. value between 0-1.
-          //1이면, 마우스따라 끝까지 따라옴, 0이면 제한된 곳안에서 넘어오지 않음
-          dragConstraints={biggerBoxRef}
-          //dragConstraints={{ top: -200, bottom: 200, left: -200, right: 200 }}
-          variants={boxVariants}
-          whileHover="hover"
-          whileDrag="drag"
-          whileTap="click"
-        />
-      </BiggerBox>
+    <Wrapper
+      style={{
+        background: gradient,
+      }}
+    >
+      <Box style={{ x, rotateZ, scale: scale }} drag="x" dragSnapToOrigin />
     </Wrapper>
   );
 }
